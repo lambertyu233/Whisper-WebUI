@@ -280,7 +280,7 @@ class BaseTranscriptionPipeline(ABC):
                 )
 
                 file_name, file_ext = os.path.splitext(os.path.basename(file))
-                if save_same_dir and input_folder_path:
+                if save_same_dir:
                     output_dir = os.path.dirname(file)
                     subtitle, file_path = generate_file(
                         output_dir=output_dir,

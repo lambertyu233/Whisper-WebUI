@@ -21,6 +21,8 @@ from modules.utils.logger import get_logger
 logger = get_logger()
 
 
+
+
 class App:
     def __init__(self, args):
         self.args = args
@@ -114,20 +116,34 @@ class App:
                     with gr.TabItem(_("File")):  # tab1
                         with gr.Column():
                             input_file = gr.Files(type="filepath", label=_("Upload File here"), file_types=MEDIA_EXTENSION)
-                            tb_input_folder = gr.Textbox(label="Input Folder Path (Optional)",
-                                                         info="Optional: Specify the folder path where the input files are located, if you prefer to use local files instead of uploading them."
-                                                              " Leave this field empty if you do not wish to use a local path.",
-                                                         visible=self.args.colab,
+                            with gr.Row():
+                                btn_select_local_file = gr.Button("选择本地文件", variant="secondary")
+                                btn_select_local_folder = gr.Button("选择本地文件夹", variant="secondary")
+
+                            tb_local_files = gr.Textbox(label="已选择的本地文件路径 (直接读取，不复制/不上传)",
+                                                        placeholder="未选择本地文件",
+                                                        lines=3,
+                                                        interactive=False)
+
+                            tb_input_folder = gr.Textbox(label="输入本地文件夹路径 (可选)",
+                                                         info="可选：如果您想直接转录本地文件，可以指定本地文件夹路径。如果不希望使用本地路径，请保留为空。",
+                                                         visible=True,
                                                          value="")
-                            cb_include_subdirectory = gr.Checkbox(label="Include Subdirectory Files",
-                                                                  info="When using Input Folder Path above, whether to include all files in the subdirectory or not.",
-                                                                  visible=self.args.colab,
+                            cb_include_subdirectory = gr.Checkbox(label="包含子目录文件",
+                                                                  info="当使用上述本地文件夹路径时，是否包含子文件夹中的所有文件。",
+                                                                  visible=True,
                                                                   value=False)
-                            cb_save_same_dir = gr.Checkbox(label="Save outputs at same directory",
-                                                           info="When using Input Folder Path above, whether to save output in the same directory as inputs or not, in addition to the original"
-                                                                " output directory.",
-                                                           visible=self.args.colab,
+                            cb_save_same_dir = gr.Checkbox(label="保存在输入文件同级目录下",
+                                                           info="当使用上述本地文件夹路径时，是否除默认 outputs 目录外，也在输入文件相同目录下存一份输出结果。",
+                                                           visible=True,
                                                            value=True)
+
+                            btn_select_local_file.click(fn=self.on_select_local_files, outputs=[tb_local_files, input_file, tb_input_folder])
+                            btn_select_local_folder.click(fn=self.on_select_local_folder, outputs=[tb_local_files, input_file, tb_input_folder])
+                            
+                            input_file.change(fn=lambda x: "" if x else gr.update(), inputs=input_file, outputs=tb_local_files)
+                            tb_input_folder.change(fn=lambda x: (None, "") if x else (gr.update(), gr.update()), inputs=tb_input_folder, outputs=[input_file, tb_local_files])
+
                         pipeline_params, dd_file_format, cb_timestamp = self.create_pipeline_inputs()
 
                         with gr.Row():
@@ -137,10 +153,10 @@ class App:
                             files_subtitles = gr.Files(label=_("Downloadable output file"), scale=3, interactive=False)
                             btn_openfolder = gr.Button('📂', scale=1)
 
-                        params = [input_file, tb_input_folder, cb_include_subdirectory, cb_save_same_dir,
+                        params = [input_file, tb_local_files, tb_input_folder, cb_include_subdirectory, cb_save_same_dir,
                                   dd_file_format, cb_timestamp]
                         params = params + pipeline_params
-                        btn_run.click(fn=self.whisper_inf.transcribe_file,
+                        btn_run.click(fn=self.transcribe_file_wrapper,
                                       inputs=params,
                                       outputs=[tb_indicator, files_subtitles])
                         btn_openfolder.click(fn=lambda: self.open_folder("outputs"), inputs=None, outputs=None)
@@ -195,8 +211,16 @@ class App:
                         btn_openfolder.click(fn=lambda: self.open_folder("outputs"), inputs=None, outputs=None)
 
                     with gr.TabItem(_("T2T Translation")):  # tab 4
-                        with gr.Row():
+                        with gr.Column():
                             file_subs = gr.Files(type="filepath", label=_("Upload Subtitle Files to translate here"))
+                            btn_select_local_sub = gr.Button("选择本地字幕文件", variant="secondary")
+                            
+                            tb_local_subs = gr.Textbox(label="已选择的本地字幕文件路径 (直接读取，不复制/不上传)",
+                                                       placeholder="未选择本地字幕文件",
+                                                       lines=3,
+                                                       interactive=False)
+                            btn_select_local_sub.click(fn=self.on_select_local_subs, outputs=[tb_local_subs, file_subs])
+                            file_subs.change(fn=lambda x: "" if x else gr.update(), inputs=file_subs, outputs=tb_local_subs)
 
                         with gr.TabItem(_("DeepL API")):  # sub tab1
                             with gr.Row():
@@ -223,8 +247,8 @@ class App:
                                 files_subtitles = gr.Files(label=_("Downloadable output file"), scale=3)
                                 btn_openfolder = gr.Button('📂', scale=1)
 
-                        btn_run.click(fn=self.deepl_api.translate_deepl,
-                                      inputs=[tb_api_key, file_subs, dd_source_lang, dd_target_lang,
+                        btn_run.click(fn=self.translate_deepl_wrapper,
+                                      inputs=[tb_api_key, file_subs, tb_local_subs, dd_source_lang, dd_target_lang,
                                               cb_is_pro, cb_timestamp],
                                       outputs=[tb_indicator, files_subtitles])
 
@@ -259,8 +283,8 @@ class App:
                             with gr.Column():
                                 md_vram_table = gr.HTML(NLLB_VRAM_TABLE, elem_id="md_nllb_vram_table")
 
-                        btn_run.click(fn=self.nllb_inf.translate_file,
-                                      inputs=[file_subs, dd_model_size, dd_source_lang, dd_target_lang,
+                        btn_run.click(fn=self.translate_nllb_wrapper,
+                                      inputs=[file_subs, tb_local_subs, dd_model_size, dd_source_lang, dd_target_lang,
                                               nb_max_length, cb_timestamp],
                                       outputs=[tb_indicator, files_subtitles])
 
@@ -270,7 +294,17 @@ class App:
                             outputs=None)
 
                     with gr.TabItem(_("BGM Separation")):
-                        files_audio = gr.Files(type="filepath", label=_("Upload Audio Files to separate background music"))
+                        with gr.Column():
+                            files_audio = gr.Files(type="filepath", label=_("Upload Audio Files to separate background music"))
+                            btn_select_local_audio = gr.Button("选择本地音频文件", variant="secondary")
+                            
+                            tb_local_audios = gr.Textbox(label="已选择的本地音频文件路径 (直接读取，不复制/不上传)",
+                                                         placeholder="未选择本地音频文件",
+                                                         lines=3,
+                                                         interactive=False)
+                            btn_select_local_audio.click(fn=self.on_select_local_audio, outputs=[tb_local_audios, files_audio])
+                            files_audio.change(fn=lambda x: "" if x else gr.update(), inputs=files_audio, outputs=tb_local_audios)
+
                         dd_uvr_device = gr.Dropdown(label=_("Device"), value=self.whisper_inf.music_separator.device,
                                                     choices=self.whisper_inf.music_separator.available_devices)
                         dd_uvr_model_size = gr.Dropdown(label=_("Model"), value=uvr_params["uvr_model_size"],
@@ -288,8 +322,8 @@ class App:
                                 ad_vocals = gr.Audio(label=_("Vocals"), scale=8)
                                 btn_open_vocals_folder = gr.Button('📂', scale=1)
 
-                        btn_run.click(fn=self.whisper_inf.music_separator.separate_files,
-                                      inputs=[files_audio, dd_uvr_model_size, dd_uvr_device, nb_uvr_segment_size,
+                        btn_run.click(fn=self.separate_files_wrapper,
+                                      inputs=[files_audio, tb_local_audios, dd_uvr_model_size, dd_uvr_device, nb_uvr_segment_size,
                                               cb_uvr_save_file],
                                       outputs=[ad_instrumental, ad_vocals])
                         btn_open_instrumental_folder.click(inputs=None,
@@ -329,6 +363,222 @@ class App:
             os.makedirs(folder_path, exist_ok=True)
             logger.info(f"The directory path {folder_path} has newly created.")
 
+    def select_local_files(self):
+        try:
+            import tkinter as tk
+            from tkinter import filedialog
+        except Exception as e:
+            logger.error(f"Error importing tkinter: {e}")
+            return None
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        file_patterns = " ".join([f"*{ext}" for ext in MEDIA_EXTENSION])
+        filetypes = [
+            ("媒体文件", file_patterns),
+            ("所有文件", "*.*")
+        ]
+        
+        files = filedialog.askopenfilenames(
+            title="选择媒体文件",
+            filetypes=filetypes
+        )
+        root.destroy()
+        if not files:
+            return None
+
+        # Dynamically append selected file paths to allowed_paths
+        for file in files:
+            dir_path = os.path.dirname(os.path.abspath(file))
+            if dir_path not in self.app.allowed_paths:
+                self.app.allowed_paths.append(dir_path)
+
+        return list(files)
+
+    def select_local_folder(self):
+        try:
+            import tkinter as tk
+            from tkinter import filedialog
+        except Exception as e:
+            logger.error(f"Error importing tkinter: {e}")
+            return ""
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        folder = filedialog.askdirectory(title="选择文件夹")
+        root.destroy()
+        if not folder:
+            return ""
+
+        abs_folder = os.path.abspath(folder)
+        if abs_folder not in self.app.allowed_paths:
+            self.app.allowed_paths.append(abs_folder)
+
+        return folder
+
+    def select_local_subs(self):
+        try:
+            import tkinter as tk
+            from tkinter import filedialog
+        except Exception as e:
+            logger.error(f"Error importing tkinter: {e}")
+            return None
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        filetypes = [
+            ("字幕文件", "*.srt *.vtt *.lrc *.txt"),
+            ("所有文件", "*.*")
+        ]
+        
+        files = filedialog.askopenfilenames(
+            title="选择字幕文件",
+            filetypes=filetypes
+        )
+        root.destroy()
+        if not files:
+            return None
+
+        for file in files:
+            dir_path = os.path.dirname(os.path.abspath(file))
+            if dir_path not in self.app.allowed_paths:
+                self.app.allowed_paths.append(dir_path)
+
+        return list(files)
+
+    def on_select_local_files(self):
+        files = self.select_local_files()
+        if not files:
+            return gr.update(), gr.update(), gr.update()
+        paths_str = "\n".join(files)
+        return paths_str, None, ""
+
+    def on_select_local_folder(self):
+        folder = self.select_local_folder()
+        if not folder:
+            return gr.update(), gr.update(), gr.update()
+        return "", None, folder
+
+    def on_select_local_subs(self):
+        files = self.select_local_subs()
+        if not files:
+            return gr.update(), gr.update()
+        paths_str = "\n".join(files)
+        return paths_str, None
+
+    def on_select_local_audio(self):
+        files = self.select_local_files()
+        if not files:
+            return gr.update(), gr.update()
+        paths_str = "\n".join(files)
+        return paths_str, None
+
+    def transcribe_file_wrapper(self,
+                                input_file,
+                                tb_local_files,
+                                tb_input_folder,
+                                cb_include_subdirectory,
+                                cb_save_same_dir,
+                                file_format,
+                                add_timestamp,
+                                *pipeline_params,
+                                progress=gr.Progress()):
+        files_to_transcribe = None
+        if not tb_input_folder:
+            if tb_local_files:
+                files_to_transcribe = [line.strip() for line in tb_local_files.split('\n') if line.strip()]
+            else:
+                files_to_transcribe = input_file
+
+        return self.whisper_inf.transcribe_file(
+            files_to_transcribe,
+            tb_input_folder,
+            cb_include_subdirectory,
+            cb_save_same_dir,
+            file_format,
+            add_timestamp,
+            progress,
+            *pipeline_params
+        )
+
+    def translate_deepl_wrapper(self,
+                                auth_key,
+                                file_subs,
+                                tb_local_subs,
+                                source_lang,
+                                target_lang,
+                                is_pro=False,
+                                add_timestamp=True,
+                                progress=gr.Progress()):
+        files_to_translate = None
+        if tb_local_subs:
+            files_to_translate = [line.strip() for line in tb_local_subs.split('\n') if line.strip()]
+        else:
+            files_to_translate = file_subs
+
+        return self.deepl_api.translate_deepl(
+            auth_key,
+            files_to_translate,
+            source_lang,
+            target_lang,
+            is_pro,
+            add_timestamp,
+            progress
+        )
+
+    def translate_nllb_wrapper(self,
+                               file_subs,
+                               tb_local_subs,
+                               model_size,
+                               src_lang,
+                               tgt_lang,
+                               max_length=200,
+                               add_timestamp=True,
+                               progress=gr.Progress()):
+        files_to_translate = None
+        if tb_local_subs:
+            files_to_translate = [line.strip() for line in tb_local_subs.split('\n') if line.strip()]
+        else:
+            files_to_translate = file_subs
+
+        return self.nllb_inf.translate_file(
+            files_to_translate,
+            model_size,
+            src_lang,
+            tgt_lang,
+            max_length,
+            add_timestamp,
+            progress
+        )
+
+    def separate_files_wrapper(self,
+                               files_audio,
+                               tb_local_audios,
+                               model_name,
+                               device=None,
+                               segment_size=256,
+                               save_file=True,
+                               progress=gr.Progress()):
+        files_to_separate = None
+        if tb_local_audios:
+            files_to_separate = [line.strip() for line in tb_local_audios.split('\n') if line.strip()]
+        else:
+            files_to_separate = files_audio
+
+        return self.whisper_inf.music_separator.separate_files(
+            files_to_separate,
+            model_name,
+            device,
+            segment_size,
+            save_file,
+            progress
+        )
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--whisper_type', type=str, default=WhisperImpl.FASTER_WHISPER.value,
