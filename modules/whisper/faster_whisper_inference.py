@@ -151,18 +151,43 @@ class FasterWhisperInference(BaseTranscriptionPipeline):
         local_files_only = False
         hf_prefix = "models--Systran--faster-whisper-"
         official_model_path = os.path.join(self.model_dir, hf_prefix+model_size)
-        if ((os.path.isdir(self.current_model_size) and os.path.exists(self.current_model_size)) or
-            (model_size in faster_whisper.available_models() and os.path.exists(official_model_path))):
+        
+        has_local_model = False
+        if os.path.isdir(self.current_model_size) and os.path.exists(self.current_model_size):
+            has_local_model = True
+        elif model_size in faster_whisper.available_models() and os.path.exists(official_model_path):
+            snapshots_dir = os.path.join(official_model_path, "snapshots")
+            if os.path.exists(snapshots_dir) and os.listdir(snapshots_dir):
+                for snapshot in os.listdir(snapshots_dir):
+                    snapshot_path = os.path.join(snapshots_dir, snapshot)
+                    if os.path.isdir(snapshot_path) and os.listdir(snapshot_path):
+                        has_local_model = True
+                        break
+
+        if has_local_model:
             local_files_only = True
 
         self.current_compute_type = compute_type
-        self.model = faster_whisper.WhisperModel(
-            device=self.device,
-            model_size_or_path=self.current_model_size,
-            download_root=self.model_dir,
-            compute_type=self.current_compute_type,
-            local_files_only=local_files_only
-        )
+        try:
+            self.model = faster_whisper.WhisperModel(
+                device=self.device,
+                model_size_or_path=self.current_model_size,
+                download_root=self.model_dir,
+                compute_type=self.current_compute_type,
+                local_files_only=local_files_only
+            )
+        except Exception as e:
+            if local_files_only:
+                print(f"Failed to load model locally, retrying with local_files_only=False. Error: {e}")
+                self.model = faster_whisper.WhisperModel(
+                    device=self.device,
+                    model_size_or_path=self.current_model_size,
+                    download_root=self.model_dir,
+                    compute_type=self.current_compute_type,
+                    local_files_only=False
+                )
+            else:
+                raise e
 
     def get_model_paths(self):
         """
