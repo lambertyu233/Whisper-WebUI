@@ -81,6 +81,7 @@ class FasterWhisperInference(BaseTranscriptionPipeline):
             best_of=params.best_of,
             patience=params.patience,
             temperature=params.temperature,
+            condition_on_previous_text=params.condition_on_previous_text,
             initial_prompt=params.initial_prompt,
             compression_ratio_threshold=params.compression_ratio_threshold,
             length_penalty=params.length_penalty,
