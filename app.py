@@ -121,7 +121,8 @@ class App:
                 with gr.Tabs():
                     with gr.TabItem(_("File")):  # tab1
                         with gr.Column():
-                            input_file = gr.Files(type="filepath", label=_("Upload File here"), file_types=MEDIA_EXTENSION)
+                            input_file = gr.Files(type="filepath", label=_("Upload File here"), file_types=MEDIA_EXTENSION,
+                                                   visible=False)
                             with gr.Row():
                                 btn_select_local_file = gr.Button("选择本地文件", variant="secondary")
                                 btn_select_local_folder = gr.Button("选择本地文件夹", variant="secondary")
