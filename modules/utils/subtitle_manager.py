@@ -5,11 +5,15 @@ import os
 import re
 import sys
 import zlib
+from collections import Counter
 from typing import Callable, List, Optional, TextIO, Union, Dict, Tuple
 from datetime import datetime
 
 from modules.whisper.data_classes import Segment, Word
 from .files_manager import read_file
+from .logger import get_logger
+
+logger = get_logger()
 
 
 def format_timestamp(
@@ -67,6 +71,122 @@ def get_end(segments: List[dict]) -> Optional[float]:
     )
 
 
+
+def is_repetitive_text(text: Optional[str]) -> bool:
+    if not text:
+        return False
+
+    raw_text = text.strip()
+    if not raw_text:
+        return True
+
+    # 1. Check raw character / symbol repetition (covers elongated symbols like 〜, ~, ー, -, ., 。, ellipses)
+    raw_match = re.search(r'(.)\1{3,}', raw_text)
+    if raw_match:
+        rep_len = len(raw_match.group(0))
+        if rep_len >= 5 or (rep_len / len(raw_text) >= 0.5):
+            return True
+
+    # 2. Clean punctuation/whitespace: if empty after removing non-alphanumeric/CJK chars
+    clean_chars = re.sub(r'[\s\W_]+', '', raw_text, flags=re.UNICODE)
+    if not clean_chars:
+        return True
+
+    # 3. Single character repeated in cleaned text
+    match = re.search(r'(.)\1{3,}', clean_chars)
+    if match:
+        repeat_len = len(match.group(0))
+        if repeat_len >= 5 or (len(clean_chars) <= 12 and repeat_len >= 4) or (repeat_len / len(clean_chars) >= 0.5):
+            return True
+
+    # 4. Low character diversity (e.g. "うぅぅぅぅ" containing only 2 unique chars, or heavy character repetition)
+    unique_chars = set(clean_chars)
+    if len(clean_chars) >= 4 and len(unique_chars) == 1:
+        return True
+    if len(clean_chars) >= 5 and len(unique_chars) <= 2:
+        counts = Counter(clean_chars)
+        max_freq = max(counts.values())
+        if max_freq / len(clean_chars) >= 0.6:
+            return True
+    if len(clean_chars) >= 10 and len(unique_chars) <= 4:
+        counts = Counter(clean_chars)
+        top2_freq = sum(c for _, c in counts.most_common(2))
+        if top2_freq / len(clean_chars) >= 0.5:
+            return True
+
+    # 5. Token-based repetition with delimiters (e.g. "唰，唰，唰，", "あ、あ、あ、")
+    tokens = [t for t in re.split(r'[\s,，、。！？!?；;:：…—·~〜～\-_]+', raw_text) if t]
+    if len(tokens) >= 3:
+        counts = Counter(tokens)
+        most_common_word, most_common_count = counts.most_common(1)[0]
+        if most_common_count >= 3 and (most_common_count / len(tokens)) >= 0.7:
+            return True
+        if len(counts) <= 2 and len(tokens) >= 4:
+            return True
+
+    # 6. Periodic repetition across the entire string (e.g. "你是你是你是你是")
+    for pattern_len in range(1, min(15, len(clean_chars) // 2 + 1)):
+        pattern = clean_chars[:pattern_len]
+        repeat_count = len(clean_chars) // pattern_len
+        if repeat_count >= 3:
+            reconstructed = pattern * repeat_count
+            remainder = clean_chars[len(reconstructed):]
+            if pattern.startswith(remainder) and clean_chars.startswith(reconstructed):
+                return True
+
+    # 7. Substring / phrase repetitions (iterate through all matched repeating chunks)
+    total_repeat_len = 0
+    for m in re.finditer(r'(.{1,12}?)\1{2,}', clean_chars):
+        matched_str = m.group(0)
+        unit = m.group(1)
+        repeat_num = len(matched_str) // len(unit)
+        if repeat_num >= 4:
+            return True
+        if repeat_num >= 3 and len(matched_str) / len(clean_chars) >= 0.5:
+            return True
+        total_repeat_len += len(matched_str)
+
+    if total_repeat_len / len(clean_chars) >= 0.7:
+        return True
+
+    return False
+
+
+
+def clean_repetitive_segments(
+    result: Union[dict, List[Segment]],
+    filter_repetition: bool = True
+) -> Union[dict, List[Segment]]:
+    if not filter_repetition or not result:
+        return result
+
+    if isinstance(result, list):
+        filtered = []
+        for seg in result:
+            text = getattr(seg, "text", None) if isinstance(seg, Segment) else (seg.get("text", "") if isinstance(seg, dict) else "")
+            if is_repetitive_text(text):
+                start = getattr(seg, "start", None) if isinstance(seg, Segment) else (seg.get("start") if isinstance(seg, dict) else None)
+                end = getattr(seg, "end", None) if isinstance(seg, Segment) else (seg.get("end") if isinstance(seg, dict) else None)
+                logger.info(f"Filtered repetitive segment: [{start} -> {end}] {text}")
+                continue
+            filtered.append(seg)
+        return filtered
+    elif isinstance(result, dict) and "segments" in result:
+        filtered_segments = []
+        for seg in result["segments"]:
+            text = seg.get("text", "") if isinstance(seg, dict) else getattr(seg, "text", "")
+            if is_repetitive_text(text):
+                start = seg.get("start") if isinstance(seg, dict) else getattr(seg, "start", None)
+                end = seg.get("end") if isinstance(seg, dict) else getattr(seg, "end", None)
+                logger.info(f"Filtered repetitive segment: [{start} -> {end}] {text}")
+                continue
+            filtered_segments.append(seg)
+        result["segments"] = filtered_segments
+        return result
+
+    return result
+
+
 class ResultWriter:
     extension: str
 
@@ -75,10 +195,16 @@ class ResultWriter:
 
     def __call__(
         self, result: Union[dict, List[Segment]], output_file_name: str,
-            options: Optional[dict] = None, **kwargs
+            options: Optional[dict] = None, filter_repetition: bool = False, **kwargs
     ):
-        if isinstance(result, List) and result and isinstance(result[0], Segment):
-            result = {"segments": [seg.model_dump() for seg in result]}
+        if filter_repetition or kwargs.get("filter_repetition", False):
+            result = clean_repetitive_segments(result, filter_repetition=True)
+
+        if isinstance(result, List):
+            if result and isinstance(result[0], Segment):
+                result = {"segments": [seg.model_dump() for seg in result]}
+            else:
+                result = {"segments": result}
 
         output_path = os.path.join(
             self.output_dir, output_file_name + "." + self.extension
@@ -422,10 +548,13 @@ def get_writer(
 
 def generate_file(
     output_format: str, output_dir: str, result: Union[dict, List[Segment]], output_file_name: str,
-    add_timestamp: bool = True, **kwargs
+    add_timestamp: bool = True, filter_repetition: bool = False, **kwargs
 ) -> Tuple[str, str]:
     output_format = output_format.strip().lower().replace(".", "")
     output_format = "vtt" if output_format == "webvtt" else output_format
+
+    if filter_repetition:
+        result = clean_repetitive_segments(result, filter_repetition=True)
 
     if add_timestamp:
         timestamp = datetime.now().strftime("%m%d%H%M%S")
@@ -437,7 +566,7 @@ def generate_file(
     if isinstance(file_writer, WriteLRC) and kwargs.get("highlight_words", False):
         kwargs["highlight_words"], kwargs["align_lrc_words"] = False, True
 
-    file_writer(result=result, output_file_name=output_file_name, **kwargs)
+    file_writer(result=result, output_file_name=output_file_name, filter_repetition=filter_repetition, **kwargs)
     content = read_file(file_path)
     return content, file_path
 

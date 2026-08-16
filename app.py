@@ -68,6 +68,10 @@ class App:
             cb_timestamp = gr.Checkbox(value=whisper_params["add_timestamp"],
                                        label=_("Add a timestamp to the end of the filename"),
                                        interactive=True)
+        with gr.Row():
+            cb_filter_repetition = gr.Checkbox(value=whisper_params.get("filter_repetition", False),
+                                               label=_("Filter repetitive/hallucinatory subtitle segments"),
+                                               interactive=True)
 
         with gr.Accordion(_("Advanced Parameters"), open=False):
             whisper_inputs = WhisperParams.to_gradio_inputs(defaults=whisper_params, only_advanced=True,
@@ -94,7 +98,8 @@ class App:
         return (
             pipeline_inputs,
             dd_file_format,
-            cb_timestamp
+            cb_timestamp,
+            cb_filter_repetition
         )
 
     def launch(self):
@@ -145,7 +150,7 @@ class App:
                             input_file.change(fn=lambda x: "" if x else gr.update(), inputs=input_file, outputs=tb_local_files)
                             tb_input_folder.change(fn=lambda x: (None, "") if x else (gr.update(), gr.update()), inputs=tb_input_folder, outputs=[input_file, tb_local_files])
 
-                        pipeline_params, dd_file_format, cb_timestamp = self.create_pipeline_inputs()
+                        pipeline_params, dd_file_format, cb_timestamp, cb_filter_repetition = self.create_pipeline_inputs()
 
                         with gr.Row():
                             btn_run = gr.Button(_("GENERATE SUBTITLE FILE"), variant="primary")
@@ -155,7 +160,7 @@ class App:
                             btn_openfolder = gr.Button('📂', scale=1)
 
                         params = [input_file, tb_local_files, tb_input_folder, cb_include_subdirectory, cb_save_same_dir,
-                                  dd_file_format, cb_timestamp]
+                                  dd_file_format, cb_timestamp, cb_filter_repetition]
                         params = params + pipeline_params
                         btn_run.click(fn=self.transcribe_file_wrapper,
                                       inputs=params,
@@ -172,7 +177,7 @@ class App:
                                 tb_title = gr.Label(label=_("Youtube Title"))
                                 tb_description = gr.Textbox(label=_("Youtube Description"), max_lines=15)
 
-                        pipeline_params, dd_file_format, cb_timestamp = self.create_pipeline_inputs()
+                        pipeline_params, dd_file_format, cb_timestamp, cb_filter_repetition = self.create_pipeline_inputs()
 
                         with gr.Row():
                             btn_run = gr.Button(_("GENERATE SUBTITLE FILE"), variant="primary")
@@ -181,7 +186,7 @@ class App:
                             files_subtitles = gr.Files(label=_("Downloadable output file"), scale=3)
                             btn_openfolder = gr.Button('📂', scale=1)
 
-                        params = [tb_youtubelink, dd_file_format, cb_timestamp]
+                        params = [tb_youtubelink, dd_file_format, cb_timestamp, cb_filter_repetition]
 
                         btn_run.click(fn=self.whisper_inf.transcribe_youtube,
                                       inputs=params + pipeline_params,
@@ -195,7 +200,7 @@ class App:
                             mic_input = gr.Microphone(label=_("Record with Mic"), type="filepath", interactive=True,
                                                       show_download_button=True)
 
-                        pipeline_params, dd_file_format, cb_timestamp = self.create_pipeline_inputs()
+                        pipeline_params, dd_file_format, cb_timestamp, cb_filter_repetition = self.create_pipeline_inputs()
 
                         with gr.Row():
                             btn_run = gr.Button(_("GENERATE SUBTITLE FILE"), variant="primary")
@@ -204,7 +209,7 @@ class App:
                             files_subtitles = gr.Files(label=_("Downloadable output file"), scale=3)
                             btn_openfolder = gr.Button('📂', scale=1)
 
-                        params = [mic_input, dd_file_format, cb_timestamp]
+                        params = [mic_input, dd_file_format, cb_timestamp, cb_filter_repetition]
 
                         btn_run.click(fn=self.whisper_inf.transcribe_mic,
                                       inputs=params + pipeline_params,
@@ -488,6 +493,7 @@ class App:
                                 cb_save_same_dir,
                                 file_format,
                                 add_timestamp,
+                                filter_repetition,
                                 *pipeline_params,
                                 progress=gr.Progress()):
         files_to_transcribe = None
@@ -504,6 +510,7 @@ class App:
             cb_save_same_dir,
             file_format,
             add_timestamp,
+            filter_repetition,
             progress,
             *pipeline_params
         )

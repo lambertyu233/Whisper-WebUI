@@ -81,6 +81,7 @@ class BaseTranscriptionPipeline(ABC):
             progress: gr.Progress = gr.Progress(),
             file_format: str = "SRT",
             add_timestamp: bool = True,
+            filter_repetition: bool = False,
             progress_callback: Optional[Callable] = None,
             *pipeline_params,
             ) -> Tuple[List[Segment], float]:
@@ -100,6 +101,8 @@ class BaseTranscriptionPipeline(ABC):
             Subtitle file format between ["SRT", "WebVTT", "txt", "lrc"]
         add_timestamp: bool
             Whether to add a timestamp at the end of the filename.
+        filter_repetition: bool
+            Whether to filter repetitive/hallucinatory subtitle segments.
         progress_callback: Optional[Callable]
             callback function to show progress. Can be used to update progress in the backend.
 
@@ -199,10 +202,14 @@ class BaseTranscriptionPipeline(ABC):
             if diarization_params.enable_offload:
                 self.diarizer.offload()
 
+        if filter_repetition:
+            result = clean_repetitive_segments(result, filter_repetition=True)
+
         self.cache_parameters(
             params=params,
             file_format=file_format,
-            add_timestamp=add_timestamp
+            add_timestamp=add_timestamp,
+            filter_repetition=filter_repetition
         )
 
         if not result:
@@ -220,6 +227,7 @@ class BaseTranscriptionPipeline(ABC):
                         save_same_dir: Optional[str] = None,
                         file_format: str = "SRT",
                         add_timestamp: bool = True,
+                        filter_repetition: bool = False,
                         progress=gr.Progress(),
                         *pipeline_params,
                         ) -> Tuple[str, List]:
@@ -243,6 +251,8 @@ class BaseTranscriptionPipeline(ABC):
             Subtitle File format to write from gr.Dropdown(). Supported format: [SRT, WebVTT, txt]
         add_timestamp: bool
             Boolean value from gr.Checkbox() that determines whether to add a timestamp at the end of the subtitle filename.
+        filter_repetition: bool
+            Boolean value from gr.Checkbox() that determines whether to filter repetitive subtitle segments.
         progress: gr.Progress
             Indicator to show progress directly in gradio.
         *pipeline_params: tuple
@@ -275,6 +285,7 @@ class BaseTranscriptionPipeline(ABC):
                     progress,
                     file_format,
                     add_timestamp,
+                    filter_repetition,
                     None,
                     *pipeline_params,
                 )
@@ -288,6 +299,7 @@ class BaseTranscriptionPipeline(ABC):
                         output_format=file_format,
                         result=transcribed_segments,
                         add_timestamp=add_timestamp,
+                        filter_repetition=filter_repetition,
                         **writer_options
                     )
 
@@ -297,6 +309,7 @@ class BaseTranscriptionPipeline(ABC):
                     output_format=file_format,
                     result=transcribed_segments,
                     add_timestamp=add_timestamp,
+                    filter_repetition=filter_repetition,
                     **writer_options
                 )
                 files_info[file_name] = {"subtitle": read_file(file_path), "time_for_task": time_for_task, "path": file_path}
@@ -321,6 +334,7 @@ class BaseTranscriptionPipeline(ABC):
                        mic_audio: str,
                        file_format: str = "SRT",
                        add_timestamp: bool = True,
+                       filter_repetition: bool = False,
                        progress=gr.Progress(),
                        *pipeline_params,
                        ) -> Tuple[str, str]:
@@ -335,6 +349,8 @@ class BaseTranscriptionPipeline(ABC):
             Subtitle File format to write from gr.Dropdown(). Supported format: [SRT, WebVTT, txt]
         add_timestamp: bool
             Boolean value from gr.Checkbox() that determines whether to add a timestamp at the end of the filename.
+        filter_repetition: bool
+            Boolean value from gr.Checkbox() that determines whether to filter repetitive subtitle segments.
         progress: gr.Progress
             Indicator to show progress directly in gradio.
         *pipeline_params: tuple
@@ -359,6 +375,7 @@ class BaseTranscriptionPipeline(ABC):
                 progress,
                 file_format,
                 add_timestamp,
+                filter_repetition,
                 None,
                 *pipeline_params,
             )
@@ -371,6 +388,7 @@ class BaseTranscriptionPipeline(ABC):
                 output_format=file_format,
                 result=transcribed_segments,
                 add_timestamp=add_timestamp,
+                filter_repetition=filter_repetition,
                 **writer_options
             )
 
@@ -383,6 +401,7 @@ class BaseTranscriptionPipeline(ABC):
                            youtube_link: str,
                            file_format: str = "SRT",
                            add_timestamp: bool = True,
+                           filter_repetition: bool = False,
                            progress=gr.Progress(),
                            *pipeline_params,
                            ) -> Tuple[str, str]:
@@ -397,6 +416,8 @@ class BaseTranscriptionPipeline(ABC):
             Subtitle File format to write from gr.Dropdown(). Supported format: [SRT, WebVTT, txt]
         add_timestamp: bool
             Boolean value from gr.Checkbox() that determines whether to add a timestamp at the end of the filename.
+        filter_repetition: bool
+            Boolean value from gr.Checkbox() that determines whether to filter repetitive subtitle segments.
         progress: gr.Progress
             Indicator to show progress directly in gradio.
         *pipeline_params: tuple
@@ -424,6 +445,7 @@ class BaseTranscriptionPipeline(ABC):
                 progress,
                 file_format,
                 add_timestamp,
+                filter_repetition,
                 None,
                 *pipeline_params,
             )
@@ -437,6 +459,7 @@ class BaseTranscriptionPipeline(ABC):
                 output_format=file_format,
                 result=transcribed_segments,
                 add_timestamp=add_timestamp,
+                filter_repetition=filter_repetition,
                 **writer_options
             )
 
@@ -580,7 +603,8 @@ class BaseTranscriptionPipeline(ABC):
     def cache_parameters(
         params: TranscriptionPipelineParams,
         file_format: str = "SRT",
-        add_timestamp: bool = True
+        add_timestamp: bool = True,
+        filter_repetition: bool = False
     ):
         """Cache parameters to the yaml file"""
         cached_params = load_yaml(DEFAULT_PARAMETERS_CONFIG_PATH)
@@ -588,6 +612,7 @@ class BaseTranscriptionPipeline(ABC):
 
         cached_yaml = {**cached_params, **param_to_cache}
         cached_yaml["whisper"]["add_timestamp"] = add_timestamp
+        cached_yaml["whisper"]["filter_repetition"] = filter_repetition
         cached_yaml["whisper"]["file_format"] = file_format
 
         supress_token = cached_yaml["whisper"].get("suppress_tokens", None)

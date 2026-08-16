@@ -7,6 +7,7 @@ en:
   Translate to English?: Translate to English? (Whisper's End-To-End Speech-To-Text
     translation feature)
   Add a timestamp to the end of the filename: Add a timestamp to the end of the filename
+  Filter repetitive/hallucinatory subtitle segments: Filter repetitive/hallucinatory subtitle segments
   Offload sub model when finished: Offload model when finished
   Advanced Parameters: Advanced Parameters
   Enabling this will remove background music: Enabling this will remove background
@@ -137,6 +138,7 @@ ko:
   File Format: 파일 형식
   Translate to English?: 영어로 번역합니까? (위스퍼 모델 자체 번역 기능)
   Add a timestamp to the end of the filename: 파일 이름 끝에 타임스태프 붙이기
+  Filter repetitive/hallucinatory subtitle segments: 반복 어구/환각 자막 감지 및 필터링 활성화
   Offload sub model when finished: 완료 후 모델 오프로드. (VRAM 이 부족할 시 체크하세요.)
   Advanced Parameters: 고급 변수
   Enabling this will remove background music: 받아쓰기 이전에 먼저 배경 음악 제거용 서브 모델을 활성화 합니다.
@@ -186,6 +188,7 @@ ja:
   File Format: File Format
   Translate to English?: Translate to English?
   Add a timestamp to the end of the filename: Add a timestamp to the end of the filename
+  Filter repetitive/hallucinatory subtitle segments: 繰り返し語句/幻覚字幕の検出とフィルタリングを有効化
   Offload sub model when finished: Offload model when finished
   Advanced Parameters: Advanced Parameters
   Enabling this will remove background music: Enabling this will remove background
@@ -239,6 +242,7 @@ es:
   File Format: File Format
   Translate to English?: Translate to English?
   Add a timestamp to the end of the filename: Add a timestamp to the end of the filename
+  Filter repetitive/hallucinatory subtitle segments: Filtrar segmentos de subtítulos repetitivos/alucinaciones
   Offload sub model when finished: Offload model when finished
   Advanced Parameters: Advanced Parameters
   Enabling this will remove background music: Enabling this will remove background
@@ -292,6 +296,7 @@ fr:
   File Format: Format de fichier
   Translate to English?: Traduire en anglais ?
   Add a timestamp to the end of the filename: Ajouter un timestamp à la fin du nom
+  Filter repetitive/hallucinatory subtitle segments: Filtrer les segments de sous-titres répétitifs/hallucinatoires
     de fichier
   Offload sub model when finished: Décharger le sous-modèle une fois terminé
   Advanced Parameters: Paramètres avancés
@@ -349,6 +354,7 @@ de:
   File Format: Dateiformat
   Translate to English?: Ins Englische übersetzen?
   Add a timestamp to the end of the filename: Zeitstempel an den Dateinamen anhängen
+  Filter repetitive/hallucinatory subtitle segments: Wiederholte/halluzinierte Untertitelzeilen filtern
   Offload sub model when finished: Submodell entladen wenn nicht mehr benötigt
   Advanced Parameters: Erweiterte Parameter
   Enabling this will remove background music: Aktivierung entfernt Hintergrundmusik
@@ -405,6 +411,7 @@ nl:
   Translate to English?: Naar Engels vertalen? (Whispers End-To-End Speech-To-Text
     vertaalfunctie)
   Add a timestamp to the end of the filename: Tijdstempel aan het einde van de bestandsnaam toevoegen
+  Filter repetitive/hallucinatory subtitle segments: Repetitieve/hallucinerende ondertitels filteren
   Offload sub model when finished: Offload model na voltooiing
   Advanced Parameters: Geavanceerde Parameters
   Enabling this will remove background music: Hiermee wordt achtergrondmuziek door het submodel verwijderd, voorafgaand aan de transcriptie
@@ -455,6 +462,7 @@ zh:
   File Format: 字幕文件格式
   Translate to English?: 将字幕翻译成英语
   Add a timestamp to the end of the filename: 在文件名末尾加入时间戳
+  Filter repetitive/hallucinatory subtitle segments: 启用重复词语/幻觉单句检测与过滤
   Offload sub model when finished: 完成后卸载子模型
   Advanced Parameters: 高级参数
   Enabling this will remove background music: 启用此功能将会在进行转录前去除背景音乐
@@ -573,6 +581,7 @@ uk:
   File Format: Формат файлу
   Translate to English?: Перекласти на англійську?
   Add a timestamp to the end of the filename: Додати мітку часу до кінця імені файлу
+  Filter repetitive/hallucinatory subtitle segments: Фільтрувати повторювані/галюцинаційні субтитри
   Offload sub model when finished: Після завершення вивантажте підмодель
   Advanced Parameters: Розширені параметри
   Enabling this will remove background music: Увімкнення цього видалить фонову музику
@@ -627,6 +636,7 @@ ru:
   File Format: Формат файла
   Translate to English?: Перевести на английский?
   Add a timestamp to the end of the filename: Добавить метку времени в конец имени
+  Filter repetitive/hallucinatory subtitle segments: Фильтровать повторяющиеся/галлюцинаторные субтитры
     файла
   Offload sub model when finished: Выгрузить подмодель после завершения
   Advanced Parameters: Расширенные параметры
@@ -682,6 +692,7 @@ tr:
   File Format: Dosya Formatı
   Translate to English?: İngilizceye Çevir?
   Add a timestamp to the end of the filename: Dosya adının sonuna zaman damgası ekle
+  Filter repetitive/hallucinatory subtitle segments: Tekrarlayan/halüsinatif altyazı segmentlerini filtrele
   Offload sub model when finished: Alt modeli bitirdiğinizde boşaltın
   Advanced Parameters: Gelişmiş Parametreler
   Enabling this will remove background music: Bunu etkinleştirmek, arka plan müziğini
@@ -736,6 +747,7 @@ eu:
   File Format: Fitxategi Formatua
   Translate to English?: Itzuli ingelesera?
   Add a timestamp to the end of the filename: Gehitu denbora marka fitxategi amaieran
+  Filter repetitive/hallucinatory subtitle segments: Iragazi errepikatutako azpitituluak
   Offload sub model when finished: Deskargatu azpieredua amaitutakoan
   Advanced Parameters: Aukera Aurreratuak
   Enabling this will remove background music: Hau aktibatuz, transkribatu aurretik
@@ -797,6 +809,7 @@ he: # Hebrew
   File Format: פורמט קובץ
   Translate to English?: לתרגם לאנגלית?
   Add a timestamp to the end of the filename: הוסף חותמת זמן לסוף שם הקובץ
+  Filter repetitive/hallucinatory subtitle segments: Iragazi errepikatutako azpitituluak
   Advanced Parameters: פרמטרים מתקדמים
   Background Music Remover Filter: מסנן הסרת מוזיקת רקע
   Enabling this will remove background music: הפעלה תסיר מוזיקת רקע באמצעות מודל משנה לפני תמלול
@@ -834,6 +847,7 @@ zh-TW:
   File Format: 檔案格式
   Translate to English? (Whisper's End-To-End Speech-To-Text translation feature): 翻譯成英文？(Whisper 的端到端語音轉文字翻譯功能)
   Add a timestamp to the end of the filename: 在檔名結尾加入時間戳記
+  Filter repetitive/hallucinatory subtitle segments: Iragazi errepikatutako azpitituluak
   Offload sub model when finished: 完成後卸載模型
   Advanced Parameters: 進階參數
   Enabling this will remove background music: 啟用此功能將在轉錄前，透過子模型移除背景音樂
