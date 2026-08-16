@@ -7,7 +7,8 @@ import yaml
 from modules.utils.paths import (FASTER_WHISPER_MODELS_DIR, DIARIZATION_MODELS_DIR, OUTPUT_DIR, WHISPER_MODELS_DIR,
                                  INSANELY_FAST_WHISPER_MODELS_DIR, NLLB_MODELS_DIR, DEFAULT_PARAMETERS_CONFIG_PATH,
                                  UVR_MODELS_DIR, I18N_YAML_PATH)
-from modules.utils.files_manager import load_yaml, MEDIA_EXTENSION
+from modules.utils.files_manager import load_yaml, MEDIA_EXTENSION, is_video, get_media_files
+from modules.utils.audio_manager import batch_extract_audio
 from modules.whisper.whisper_factory import WhisperFactory
 from modules.translation.nllb_inference import NLLBInference
 from modules.ui.htmls import *
@@ -154,11 +155,26 @@ class App:
                         pipeline_params, dd_file_format, cb_timestamp, cb_filter_repetition = self.create_pipeline_inputs()
 
                         with gr.Row():
+                            btn_extract_audio = gr.Button(_("GENERATE AUDIO FILE"), variant="secondary", interactive=False)
+                        with gr.Row():
                             btn_run = gr.Button(_("GENERATE SUBTITLE FILE"), variant="primary")
                         with gr.Row():
                             tb_indicator = gr.Textbox(label=_("Output"), scale=5)
                             files_subtitles = gr.Files(label=_("Downloadable output file"), scale=3, interactive=False)
                             btn_openfolder = gr.Button('📂', scale=1)
+
+                        extract_params = [input_file, tb_local_files, tb_input_folder, cb_include_subdirectory]
+                        btn_extract_audio.click(fn=self.extract_audio_wrapper,
+                                                inputs=extract_params,
+                                                outputs=[tb_indicator, files_subtitles])
+
+                        check_video_inputs = [input_file, tb_local_files, tb_input_folder, cb_include_subdirectory]
+                        btn_select_local_file.click(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        btn_select_local_folder.click(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        input_file.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        tb_local_files.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        tb_input_folder.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        cb_include_subdirectory.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
 
                         params = [input_file, tb_local_files, tb_input_folder, cb_include_subdirectory, cb_save_same_dir,
                                   dd_file_format, cb_timestamp, cb_filter_repetition]
@@ -486,6 +502,46 @@ class App:
         paths_str = "\n".join(files)
         return paths_str, None
 
+    def on_check_has_video(self, input_file, tb_local_files, tb_input_folder, cb_include_subdirectory):
+        if tb_input_folder and os.path.isdir(tb_input_folder):
+            media_files = get_media_files(tb_input_folder, include_sub_directory=cb_include_subdirectory)
+            has_video = any(is_video(f) for f in media_files)
+            return gr.update(interactive=has_video)
+
+        if tb_local_files:
+            files = [line.strip() for line in tb_local_files.split('\n') if line.strip()]
+            has_video = any(is_video(f) for f in files)
+            return gr.update(interactive=has_video)
+
+        if input_file:
+            if isinstance(input_file, list):
+                has_video = any(is_video(f if isinstance(f, str) else getattr(f, 'name', str(f))) for f in input_file)
+            else:
+                has_video = is_video(input_file if isinstance(input_file, str) else getattr(input_file, 'name', str(input_file)))
+            return gr.update(interactive=has_video)
+
+        return gr.update(interactive=False)
+
+    def extract_audio_wrapper(self,
+                              input_file,
+                              tb_local_files,
+                              tb_input_folder,
+                              cb_include_subdirectory,
+                              progress=gr.Progress()):
+        files_to_extract = None
+        if not tb_input_folder:
+            if tb_local_files:
+                files_to_extract = [line.strip() for line in tb_local_files.split('\n') if line.strip()]
+            else:
+                files_to_extract = input_file
+
+        return batch_extract_audio(
+            files=files_to_extract,
+            input_folder_path=tb_input_folder,
+            include_subdirectory=cb_include_subdirectory,
+            progress=progress
+        )
+
     def transcribe_file_wrapper(self,
                                 input_file,
                                 tb_local_files,
@@ -625,8 +681,7 @@ parser.add_argument('--nllb_model_dir', type=str, default=NLLB_MODELS_DIR,
 parser.add_argument('--uvr_model_dir', type=str, default=UVR_MODELS_DIR,
                     help='Directory path of the UVR model')
 parser.add_argument('--output_dir', type=str, default=OUTPUT_DIR, help='Directory path of the outputs')
-_args = parser.parse_args()
-
 if __name__ == "__main__":
+    _args = parser.parse_args()
     app = App(args=_args)
     app.launch()
