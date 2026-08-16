@@ -1,25 +1,24 @@
 whisper:
-  # Default implementation is faster-whisper. This indicates model name within `models\Whisper\faster-whisper`
+  # 默认实现为 faster-whisper。指定 `models\Whisper\faster-whisper` 目录下的模型名称
   model_size: large-v2
-  # Compute type. 'float16' for CUDA, 'float32' for CPU.
+  # 计算类型。CUDA 使用 'float16'，CPU 使用 'float32'。
   compute_type: float16
-  # Whether to offload the model after the inference.
+  # 推理完成后是否卸载模型。
   enable_offload: true
 
 bgm_separation:
-  # UVR model sizes between ["UVR-MDX-NET-Inst_HQ_4", "UVR-MDX-NET-Inst_3"]
+  # UVR 模型，可选 ["UVR-MDX-NET-Inst_HQ_4", "UVR-MDX-NET-Inst_3"]
   model_size: UVR-MDX-NET-Inst_HQ_4
-  # Whether to offload the model after the inference. Should be true if your setup has a VRAM less than <16GB
+  # 推理完成后是否卸载模型。如果显存小于 16GB，建议设置为 true
   enable_offload: true
-  # Device to load BGM separation model between ["cuda", "cpu", "xpu"]
+  # 加载背景音乐分离模型的设备，可选 ["cuda", "cpu", "xpu"]
   device: cuda
 
-# Settings that apply to the `cache' directory. The output files for `/bgm-separation` are stored in the `cache' directory,
-# (You can check out the actual generated files by testing `/bgm-separation`.)
-# You can adjust the TTL/cleanup frequency of the files in the `cache' directory here.
+# 应用于 `cache` 目录的设置。`/bgm-separation` 的输出文件会存放在 `cache` 目录中，
+# （你可以通过测试 `/bgm-separation` 接口查看实际生成的文件。）
+# 你可以在此调整 `cache` 目录中文件的 TTL/清理频率。
 cache:
-  # TTL (Time-To-Live) in seconds, defaults to 10 minutes
+  # TTL（生存时间），单位为秒，默认为 10 分钟
   ttl: 600
-  # Clean up frequency in seconds, defaults to 1 minutes
+  # 清理频率，单位为秒，默认为 1 分钟
   frequency: 60
-

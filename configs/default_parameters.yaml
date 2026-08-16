@@ -1,5 +1,5 @@
 whisper:
-  model_size: large-v3
+  model_size: large-v3-turbo
   lang: japanese
   is_translate: false
   beam_size: 5
@@ -8,7 +8,7 @@ whisper:
   compute_type: float16
   best_of: 5
   patience: 1.0
-  condition_on_previous_text: true
+  condition_on_previous_text: false
   prompt_reset_on_temperature: 0.5
   initial_prompt: null
   temperature: 0.0
@@ -34,7 +34,7 @@ whisper:
   add_timestamp: false
   file_format: SRT
 vad:
-  vad_filter: true
+  vad_filter: false
   threshold: 0.5
   min_speech_duration_ms: 250
   max_speech_duration_s: 9999

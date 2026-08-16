@@ -125,29 +125,29 @@ class VadParams(BaseParams):
                 info=_("Enable this to transcribe only detected voice")
             ),
             gr.Slider(
-                minimum=0.0, maximum=1.0, step=0.01, label="Speech Threshold",
+                minimum=0.0, maximum=1.0, step=0.01, label=_("Speech Threshold"),
                 value=defaults.get("threshold", cls.__fields__["threshold"].default),
-                info="Lower it to be more sensitive to small sounds."
+                info=_("Lower it to be more sensitive to small sounds.")
             ),
             gr.Number(
-                label="Minimum Speech Duration (ms)", precision=0,
+                label=_("Minimum Speech Duration (ms)"), precision=0,
                 value=defaults.get("min_speech_duration_ms", cls.__fields__["min_speech_duration_ms"].default),
-                info="Final speech chunks shorter than this time are thrown out"
+                info=_("Final speech chunks shorter than this time are thrown out")
             ),
             gr.Number(
-                label="Maximum Speech Duration (s)",
+                label=_("Maximum Speech Duration (s)"),
                 value=defaults.get("max_speech_duration_s", GRADIO_NONE_NUMBER_MAX),
-                info="Maximum duration of speech chunks in \"seconds\"."
+                info=_("Maximum duration of speech chunks in \"seconds\".")
             ),
             gr.Number(
-                label="Minimum Silence Duration (ms)", precision=0,
+                label=_("Minimum Silence Duration (ms)"), precision=0,
                 value=defaults.get("min_silence_duration_ms", cls.__fields__["min_silence_duration_ms"].default),
-                info="In the end of each speech chunk wait for this time before separating it"
+                info=_("In the end of each speech chunk wait for this time before separating it")
             ),
             gr.Number(
-                label="Speech Padding (ms)", precision=0,
+                label=_("Speech Padding (ms)"), precision=0,
                 value=defaults.get("speech_pad_ms", cls.__fields__["speech_pad_ms"].default),
-                info="Final speech chunks are padded by this time each side"
+                info=_("Final speech chunks are padded by this time each side")
             )
         ]
 
@@ -239,10 +239,10 @@ class BGMSeparationParams(BaseParams):
                 value=defaults.get("device", device),
             ),
             gr.Number(
-                label="Segment Size",
+                label=_("Segment Size"),
                 value=defaults.get("segment_size", cls.__fields__["segment_size"].default),
                 precision=0,
-                info="Segment size for UVR model"
+                info=_("Segment size for UVR model")
             ),
             gr.Checkbox(
                 label=_("Save separated files to output"),
@@ -391,169 +391,169 @@ class WhisperParams(BaseParams):
 
         inputs += [
             gr.Number(
-                label="Beam Size",
+                label=_("Beam Size"),
                 value=defaults.get("beam_size", cls.__fields__["beam_size"].default),
                 precision=0,
-                info="Beam size for decoding"
+                info=_("Beam size for decoding")
             ),
             gr.Number(
-                label="Log Probability Threshold",
+                label=_("Log Probability Threshold"),
                 value=defaults.get("log_prob_threshold", cls.__fields__["log_prob_threshold"].default),
-                info="Threshold for average log probability of sampled tokens"
+                info=_("Threshold for average log probability of sampled tokens")
             ),
             gr.Number(
-                label="No Speech Threshold",
+                label=_("No Speech Threshold"),
                 value=defaults.get("no_speech_threshold", cls.__fields__["no_speech_threshold"].default),
-                info="Threshold for detecting silence"
+                info=_("Threshold for detecting silence")
             ),
             gr.Dropdown(
-                label="Compute Type",
+                label=_("Compute Type"),
                 choices=["float16", "int8", "int16"] if available_compute_types is None else available_compute_types,
                 value=defaults.get("compute_type", compute_type),
-                info="Computation type for transcription"
+                info=_("Computation type for transcription")
             ),
             gr.Number(
-                label="Best Of",
+                label=_("Best Of"),
                 value=defaults.get("best_of", cls.__fields__["best_of"].default),
                 precision=0,
-                info="Number of candidates when sampling"
+                info=_("Number of candidates when sampling")
             ),
             gr.Number(
-                label="Patience",
+                label=_("Patience"),
                 value=defaults.get("patience", cls.__fields__["patience"].default),
-                info="Beam search patience factor"
+                info=_("Beam search patience factor")
             ),
             gr.Checkbox(
-                label="Condition On Previous Text",
+                label=_("Condition On Previous Text"),
                 value=defaults.get("condition_on_previous_text", cls.__fields__["condition_on_previous_text"].default),
-                info="Use previous output as prompt for next window"
+                info=_("Use previous output as prompt for next window")
             ),
             gr.Slider(
-                label="Prompt Reset On Temperature",
+                label=_("Prompt Reset On Temperature"),
                 value=defaults.get("prompt_reset_on_temperature",
                                    cls.__fields__["prompt_reset_on_temperature"].default),
                 minimum=0,
                 maximum=1,
                 step=0.01,
-                info="Temperature threshold for resetting prompt"
+                info=_("Temperature threshold for resetting prompt")
             ),
             gr.Textbox(
-                label="Initial Prompt",
+                label=_("Initial Prompt"),
                 value=defaults.get("initial_prompt", GRADIO_NONE_STR),
-                info="Initial prompt for first window"
+                info=_("Initial prompt for first window")
             ),
             gr.Slider(
-                label="Temperature",
+                label=_("Temperature"),
                 value=defaults.get("temperature", cls.__fields__["temperature"].default),
                 minimum=0.0,
                 step=0.01,
                 maximum=1.0,
-                info="Temperature for sampling"
+                info=_("Temperature for sampling")
             ),
             gr.Number(
-                label="Compression Ratio Threshold",
+                label=_("Compression Ratio Threshold"),
                 value=defaults.get("compression_ratio_threshold",
                                    cls.__fields__["compression_ratio_threshold"].default),
-                info="Threshold for gzip compression ratio"
+                info=_("Threshold for gzip compression ratio")
             )
         ]
 
         faster_whisper_inputs = [
             gr.Number(
-                label="Length Penalty",
+                label=_("Length Penalty"),
                 value=defaults.get("length_penalty", cls.__fields__["length_penalty"].default),
-                info="Exponential length penalty",
+                info=_("Exponential length penalty"),
             ),
             gr.Number(
-                label="Repetition Penalty",
+                label=_("Repetition Penalty"),
                 value=defaults.get("repetition_penalty", cls.__fields__["repetition_penalty"].default),
-                info="Penalty for repeated tokens"
+                info=_("Penalty for repeated tokens")
             ),
             gr.Number(
-                label="No Repeat N-gram Size",
+                label=_("No Repeat N-gram Size"),
                 value=defaults.get("no_repeat_ngram_size", cls.__fields__["no_repeat_ngram_size"].default),
                 precision=0,
-                info="Size of n-grams to prevent repetition"
+                info=_("Size of n-grams to prevent repetition")
             ),
             gr.Textbox(
-                label="Prefix",
+                label=_("Prefix"),
                 value=defaults.get("prefix", GRADIO_NONE_STR),
-                info="Prefix text for first window"
+                info=_("Prefix text for first window")
             ),
             gr.Checkbox(
-                label="Suppress Blank",
+                label=_("Suppress Blank"),
                 value=defaults.get("suppress_blank", cls.__fields__["suppress_blank"].default),
-                info="Suppress blank outputs at start of sampling"
+                info=_("Suppress blank outputs at start of sampling")
             ),
             gr.Textbox(
-                label="Suppress Tokens",
+                label=_("Suppress Tokens"),
                 value=defaults.get("suppress_tokens", "[-1]"),
-                info="Token IDs to suppress"
+                info=_("Token IDs to suppress")
             ),
             gr.Number(
-                label="Max Initial Timestamp",
+                label=_("Max Initial Timestamp"),
                 value=defaults.get("max_initial_timestamp", cls.__fields__["max_initial_timestamp"].default),
-                info="Maximum initial timestamp"
+                info=_("Maximum initial timestamp")
             ),
             gr.Checkbox(
-                label="Word Timestamps",
+                label=_("Word Timestamps"),
                 value=defaults.get("word_timestamps", cls.__fields__["word_timestamps"].default),
-                info="Extract word-level timestamps"
+                info=_("Extract word-level timestamps")
             ),
             gr.Textbox(
-                label="Prepend Punctuations",
+                label=_("Prepend Punctuations"),
                 value=defaults.get("prepend_punctuations", cls.__fields__["prepend_punctuations"].default),
-                info="Punctuations to merge with next word"
+                info=_("Punctuations to merge with next word")
             ),
             gr.Textbox(
-                label="Append Punctuations",
+                label=_("Append Punctuations"),
                 value=defaults.get("append_punctuations", cls.__fields__["append_punctuations"].default),
-                info="Punctuations to merge with previous word"
+                info=_("Punctuations to merge with previous word")
             ),
             gr.Number(
-                label="Max New Tokens",
+                label=_("Max New Tokens"),
                 value=defaults.get("max_new_tokens", GRADIO_NONE_NUMBER_MIN),
                 precision=0,
-                info="Maximum number of new tokens per chunk"
+                info=_("Maximum number of new tokens per chunk")
             ),
             gr.Number(
-                label="Chunk Length (s)",
+                label=_("Chunk Length (s)"),
                 value=defaults.get("chunk_length", cls.__fields__["chunk_length"].default),
                 precision=0,
-                info="Length of audio segments in seconds"
+                info=_("Length of audio segments in seconds")
             ),
             gr.Number(
-                label="Hallucination Silence Threshold (sec)",
+                label=_("Hallucination Silence Threshold (sec)"),
                 value=defaults.get("hallucination_silence_threshold",
                                    GRADIO_NONE_NUMBER_MIN),
-                info="Threshold for skipping silent periods in hallucination detection"
+                info=_("Threshold for skipping silent periods in hallucination detection")
             ),
             gr.Textbox(
-                label="Hotwords",
+                label=_("Hotwords"),
                 value=defaults.get("hotwords", cls.__fields__["hotwords"].default),
-                info="Hotwords/hint phrases for the model"
+                info=_("Hotwords/hint phrases for the model")
             ),
             gr.Number(
-                label="Language Detection Threshold",
+                label=_("Language Detection Threshold"),
                 value=defaults.get("language_detection_threshold",
                                    GRADIO_NONE_NUMBER_MIN),
-                info="Threshold for language detection probability"
+                info=_("Threshold for language detection probability")
             ),
             gr.Number(
-                label="Language Detection Segments",
+                label=_("Language Detection Segments"),
                 value=defaults.get("language_detection_segments",
                                    cls.__fields__["language_detection_segments"].default),
                 precision=0,
-                info="Number of segments for language detection"
+                info=_("Number of segments for language detection")
             )
         ]
 
         insanely_fast_whisper_inputs = [
             gr.Number(
-                label="Batch Size",
+                label=_("Batch Size"),
                 value=defaults.get("batch_size", cls.__fields__["batch_size"].default),
                 precision=0,
-                info="Batch size for processing"
+                info=_("Batch size for processing")
             )
         ]
 

@@ -105,10 +105,11 @@ class App:
 
         with self.app:
             lang = gr.Radio(choices=list(self.i18n.keys()),
+                            value="zh",
                             label=_("Language"), interactive=True,
                             visible=False,  # Set it by development purpose.
                             )
-            with Translate(self.i18n):  # Add `lang = lang` here to test dynamic change of the languages.
+            with Translate(self.i18n, lang=lang):  # Add `lang = lang` here to test dynamic change of the languages.
                 with gr.Row():
                     with gr.Column():
                         gr.Markdown(MARKDOWN, elem_id="md_project")
@@ -268,7 +269,7 @@ class App:
                                                              value=nllb_params["target_lang"],
                                                              choices=self.nllb_inf.available_target_langs)
                             with gr.Row():
-                                nb_max_length = gr.Number(label="Max Length Per Line", value=nllb_params["max_length"],
+                                nb_max_length = gr.Number(label=_("Max Length Per Line"), value=nllb_params["max_length"],
                                                           precision=0)
                             with gr.Row():
                                 cb_timestamp = gr.Checkbox(value=translation_params["add_timestamp"],
@@ -309,7 +310,7 @@ class App:
                                                     choices=self.whisper_inf.music_separator.available_devices)
                         dd_uvr_model_size = gr.Dropdown(label=_("Model"), value=uvr_params["uvr_model_size"],
                                                         choices=self.whisper_inf.music_separator.available_models)
-                        nb_uvr_segment_size = gr.Number(label="Segment Size", value=uvr_params["segment_size"],
+                        nb_uvr_segment_size = gr.Number(label=_("Segment Size"), value=uvr_params["segment_size"],
                                                         precision=0)
                         cb_uvr_save_file = gr.Checkbox(label=_("Save separated files to output"),
                                                        value=True, visible=False)

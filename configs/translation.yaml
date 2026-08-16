@@ -52,6 +52,83 @@ en:
   Instrumental: Instrumental
   Vocals: Vocals
   BGM Separation: BGM Separation
+  Speech Threshold: Speech Threshold
+  Lower it to be more sensitive to small sounds.: Lower it to be more sensitive to
+    small sounds.
+  Minimum Speech Duration (ms): Minimum Speech Duration (ms)
+  Final speech chunks shorter than this time are thrown out: Final speech chunks shorter
+    than this time are thrown out
+  Maximum Speech Duration (s): Maximum Speech Duration (s)
+  "Maximum duration of speech chunks in \"seconds\".": "Maximum duration of speech chunks
+    in \"seconds\"."
+  Minimum Silence Duration (ms): Minimum Silence Duration (ms)
+  In the end of each speech chunk wait for this time before separating it: In the end
+    of each speech chunk wait for this time before separating it
+  Speech Padding (ms): Speech Padding (ms)
+  Final speech chunks are padded by this time each side: Final speech chunks are padded
+    by this time each side
+  Segment Size: Segment Size
+  Segment size for UVR model: Segment size for UVR model
+  Beam Size: Beam Size
+  Beam size for decoding: Beam size for decoding
+  Log Probability Threshold: Log Probability Threshold
+  Threshold for average log probability of sampled tokens: Threshold for average log
+    probability of sampled tokens
+  No Speech Threshold: No Speech Threshold
+  Threshold for detecting silence: Threshold for detecting silence
+  Compute Type: Compute Type
+  Computation type for transcription: Computation type for transcription
+  Best Of: Best Of
+  Number of candidates when sampling: Number of candidates when sampling
+  Patience: Patience
+  Beam search patience factor: Beam search patience factor
+  Condition On Previous Text: Condition On Previous Text
+  Use previous output as prompt for next window: Use previous output as prompt for
+    next window
+  Prompt Reset On Temperature: Prompt Reset On Temperature
+  Temperature threshold for resetting prompt: Temperature threshold for resetting prompt
+  Initial Prompt: Initial Prompt
+  Initial prompt for first window: Initial prompt for first window
+  Temperature: Temperature
+  Temperature for sampling: Temperature for sampling
+  Compression Ratio Threshold: Compression Ratio Threshold
+  Threshold for gzip compression ratio: Threshold for gzip compression ratio
+  Length Penalty: Length Penalty
+  Exponential length penalty: Exponential length penalty
+  Repetition Penalty: Repetition Penalty
+  Penalty for repeated tokens: Penalty for repeated tokens
+  No Repeat N-gram Size: No Repeat N-gram Size
+  Size of n-grams to prevent repetition: Size of n-grams to prevent repetition
+  Prefix: Prefix
+  Prefix text for first window: Prefix text for first window
+  Suppress Blank: Suppress Blank
+  Suppress blank outputs at start of sampling: Suppress blank outputs at start of sampling
+  Suppress Tokens: Suppress Tokens
+  Token IDs to suppress: Token IDs to suppress
+  Max Initial Timestamp: Max Initial Timestamp
+  Maximum initial timestamp: Maximum initial timestamp
+  Word Timestamps: Word Timestamps
+  Extract word-level timestamps: Extract word-level timestamps
+  Prepend Punctuations: Prepend Punctuations
+  Punctuations to merge with next word: Punctuations to merge with next word
+  Append Punctuations: Append Punctuations
+  Punctuations to merge with previous word: Punctuations to merge with previous word
+  Max New Tokens: Max New Tokens
+  Maximum number of new tokens per chunk: Maximum number of new tokens per chunk
+  Chunk Length (s): Chunk Length (s)
+  Length of audio segments in seconds: Length of audio segments in seconds
+  Hallucination Silence Threshold (sec): Hallucination Silence Threshold (sec)
+  Threshold for skipping silent periods in hallucination detection: Threshold for skipping
+    silent periods in hallucination detection
+  Hotwords: Hotwords
+  Hotwords/hint phrases for the model: Hotwords/hint phrases for the model
+  Language Detection Threshold: Language Detection Threshold
+  Threshold for language detection probability: Threshold for language detection probability
+  Language Detection Segments: Language Detection Segments
+  Number of segments for language detection: Number of segments for language detection
+  Batch Size: Batch Size
+  Batch size for processing: Batch size for processing
+  Max Length Per Line: Max Length Per Line
 ko:
   Language: 언어
   Upload File here: 파일을 업로드 하세요
@@ -419,6 +496,75 @@ zh:
   Instrumental: 器乐声
   Vocals: 人声
   BGM Separation: 背景音乐分离
+  Speech Threshold: 语音阈值
+  Lower it to be more sensitive to small sounds.: 调低阈值可更灵敏地捕捉较小的声音。
+  Minimum Speech Duration (ms): 最小语音时长（毫秒）
+  Final speech chunks shorter than this time are thrown out: 短于此时长的语音片段将被丢弃
+  Maximum Speech Duration (s): 最大语音时长（秒）
+  "Maximum duration of speech chunks in \"seconds\".": 语音片段的最大时长（单位：秒）
+  Minimum Silence Duration (ms): 最小静音时长（毫秒）
+  In the end of each speech chunk wait for this time before separating it: 在每个语音片段结束后等待此时长再进行分割
+  Speech Padding (ms): 语音填充（毫秒）
+  Final speech chunks are padded by this time each side: 每个最终语音片段的两侧将按此时长进行填充
+  Segment Size: 分段大小
+  Segment size for UVR model: UVR 模型的分段大小
+  Beam Size: 光束宽度（Beam Size）
+  Beam size for decoding: 解码时使用的光束宽度
+  Log Probability Threshold: 对数概率阈值
+  Threshold for average log probability of sampled tokens: 采样令牌平均对数概率的阈值
+  No Speech Threshold: 无语音阈值
+  Threshold for detecting silence: 用于检测静音的阈值
+  Compute Type: 计算类型
+  Computation type for transcription: 转录时使用的计算类型
+  Best Of: 候选数（Best Of）
+  Number of candidates when sampling: 采样时生成的候选数量
+  Patience: 耐心系数（Patience）
+  Beam search patience factor: 光束搜索的耐心系数
+  Condition On Previous Text: 基于前文内容
+  Use previous output as prompt for next window: 将上一段的输出作为下一窗口的提示词
+  Prompt Reset On Temperature: 提示词重置温度
+  Temperature threshold for resetting prompt: 重置提示词的温度阈值
+  Initial Prompt: 初始提示词
+  Initial prompt for first window: 第一个窗口的初始提示词
+  Temperature: 温度
+  Temperature for sampling: 采样温度
+  Compression Ratio Threshold: 压缩比阈值
+  Threshold for gzip compression ratio: gzip 压缩比阈值
+  Length Penalty: 长度惩罚
+  Exponential length penalty: 指数长度惩罚
+  Repetition Penalty: 重复惩罚
+  Penalty for repeated tokens: 对重复令牌的惩罚
+  No Repeat N-gram Size: 禁止重复的 N-gram 大小
+  Size of n-grams to prevent repetition: 防止重复的 n-gram 大小
+  Prefix: 前缀
+  Prefix text for first window: 第一个窗口的前缀文本
+  Suppress Blank: 抑制空白
+  Suppress blank outputs at start of sampling: 在采样开始时抑制空白输出
+  Suppress Tokens: 抑制令牌
+  Token IDs to suppress: 需要抑制的令牌 ID
+  Max Initial Timestamp: 最大初始时间戳
+  Maximum initial timestamp: 最大初始时间戳
+  Word Timestamps: 词级时间戳
+  Extract word-level timestamps: 提取词级时间戳
+  Prepend Punctuations: 前置标点
+  Punctuations to merge with next word: 需要与下一个词合并的标点
+  Append Punctuations: 后置标点
+  Punctuations to merge with previous word: 需要与上一个词合并的标点
+  Max New Tokens: 最大新令牌数
+  Maximum number of new tokens per chunk: 每个块的最大新令牌数量
+  Chunk Length (s): 分块长度（秒）
+  Length of audio segments in seconds: 音频片段长度（秒）
+  Hallucination Silence Threshold (sec): 幻觉静音阈值（秒）
+  Threshold for skipping silent periods in hallucination detection: 幻觉检测中跳过静音段的阈值
+  Hotwords: 热词
+  Hotwords/hint phrases for the model: 模型的热词/提示短语
+  Language Detection Threshold: 语言检测阈值
+  Threshold for language detection probability: 语言检测概率的阈值
+  Language Detection Segments: 语言检测片段数
+  Number of segments for language detection: 用于语言检测的片段数量
+  Batch Size: 批处理大小
+  Batch size for processing: 处理时的批大小
+  Max Length Per Line: 每行最大长度
 uk:
   Language: Мова
   Upload File here: Завантажте файл тут
