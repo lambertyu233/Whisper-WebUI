@@ -126,12 +126,30 @@ class App:
                                                    visible=False)
                             with gr.Row():
                                 btn_select_local_file = gr.Button("选择本地文件", variant="secondary")
+                                btn_select_local_files_multi = gr.Button("选择多个本地文件", variant="secondary")
                                 btn_select_local_folder = gr.Button("选择本地文件夹", variant="secondary")
 
                             tb_local_files = gr.Textbox(label="已选择的本地文件路径 (直接读取，不复制/不上传)",
                                                         placeholder="未选择本地文件",
                                                         lines=3,
-                                                        interactive=False)
+                                                        interactive=False,
+                                                        visible=False)
+
+                            df_local_files = gr.Dataframe(
+                                headers=["文件路径", "操作"],
+                                datatype=["str", "str"],
+                                interactive=False,
+                                col_count=(2, "fixed"),
+                                row_count=(1, "dynamic"),
+                                type="array",
+                                label="已选择的本地文件列表 (直接读取，不复制/不上传；可多次追加选择，点击 ❌ 删除该文件)",
+                                wrap=True,
+                                column_widths=["90%", "10%"],
+                                max_height=300,
+                                value=[]
+                            )
+
+                            btn_clear_local_files = gr.Button("清空已选文件", variant="secondary", size="sm")
 
                             tb_input_folder = gr.Textbox(label="输入本地文件夹路径 (可选)",
                                                          info="可选：如果您想直接转录本地文件，可以指定本地文件夹路径。如果不希望使用本地路径，请保留为空。",
@@ -145,12 +163,6 @@ class App:
                                                            info="当使用上述本地文件夹路径时，是否除默认 outputs 目录外，也在输入文件相同目录下存一份输出结果。",
                                                            visible=True,
                                                            value=True)
-
-                            btn_select_local_file.click(fn=self.on_select_local_files, outputs=[tb_local_files, input_file, tb_input_folder])
-                            btn_select_local_folder.click(fn=self.on_select_local_folder, outputs=[tb_local_files, input_file, tb_input_folder])
-                            
-                            input_file.change(fn=lambda x: "" if x else gr.update(), inputs=input_file, outputs=tb_local_files)
-                            tb_input_folder.change(fn=lambda x: (None, "") if x else (gr.update(), gr.update()), inputs=tb_input_folder, outputs=[input_file, tb_local_files])
 
                         pipeline_params, dd_file_format, cb_timestamp, cb_filter_repetition = self.create_pipeline_inputs()
 
@@ -169,10 +181,29 @@ class App:
                                                 outputs=[tb_indicator, files_subtitles])
 
                         check_video_inputs = [input_file, tb_local_files, tb_input_folder, cb_include_subdirectory]
-                        btn_select_local_file.click(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
-                        btn_select_local_folder.click(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        # 本地文件选择（追加模式，多选/单选共用同一回调）
+                        btn_select_local_file.click(fn=self.on_select_local_files, inputs=[tb_local_files],
+                                                    outputs=[tb_local_files, df_local_files, input_file, tb_input_folder])
+                        btn_select_local_files_multi.click(fn=self.on_select_local_files, inputs=[tb_local_files],
+                                                           outputs=[tb_local_files, df_local_files, input_file, tb_input_folder])
+                        # 本地文件夹选择：与本地文件列表互斥，选择后清空文件列表
+                        btn_select_local_folder.click(fn=self.on_select_local_folder,
+                                                      outputs=[tb_local_files, df_local_files, input_file, tb_input_folder])
+                        # 点击文件列表操作列的 ❌ 删除该行
+                        df_local_files.select(fn=self.on_delete_local_file, inputs=[tb_local_files],
+                                              outputs=[tb_local_files, df_local_files])
+                        # 清空全部已选文件
+                        btn_clear_local_files.click(fn=self.on_clear_local_files,
+                                                    outputs=[tb_local_files, df_local_files, input_file, tb_input_folder])
+                        # 上传文件与本地文件列表互斥
+                        input_file.change(fn=self.on_input_file_change, inputs=[input_file],
+                                          outputs=[tb_local_files, df_local_files])
                         input_file.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        # 本地文件列表变化后刷新"生成音频文件"按钮状态
                         tb_local_files.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
+                        # 文件夹输入与本地文件列表互斥
+                        tb_input_folder.change(fn=self.on_input_folder_change, inputs=[tb_input_folder],
+                                               outputs=[input_file, tb_local_files, df_local_files])
                         tb_input_folder.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
                         cb_include_subdirectory.change(fn=self.on_check_has_video, inputs=check_video_inputs, outputs=btn_extract_audio)
 
@@ -405,7 +436,7 @@ class App:
         ]
         
         files = filedialog.askopenfilenames(
-            title="选择媒体文件",
+            title="选择多个媒体文件（可按住 Ctrl 多选）",
             filetypes=filetypes
         )
         root.destroy()
@@ -475,18 +506,60 @@ class App:
 
         return list(files)
 
-    def on_select_local_files(self):
+    def on_select_local_files(self, tb_local_files):
         files = self.select_local_files()
         if not files:
-            return gr.update(), gr.update(), gr.update()
-        paths_str = "\n".join(files)
-        return paths_str, None, ""
+            return gr.update(), gr.update(), gr.update(), gr.update()
+
+        # 追加模式：保留已有文件，新选文件追加到末尾（按绝对路径去重）
+        current = []
+        if tb_local_files:
+            current = [line.strip() for line in tb_local_files.split('\n') if line.strip()]
+        for file in files:
+            abs_path = os.path.abspath(file)
+            if abs_path not in current:
+                current.append(abs_path)
+
+        paths_str = "\n".join(current)
+        rows = [[path, "❌"] for path in current]
+        return paths_str, rows, None, ""
+
+    def on_delete_local_file(self, evt: gr.SelectData, tb_local_files):
+        current = []
+        if tb_local_files:
+            current = [line.strip() for line in tb_local_files.split('\n') if line.strip()]
+
+        index = evt.index
+        # 仅当点击"操作"列（第 2 列，col == 1）时才删除对应行
+        if isinstance(index, (tuple, list)) and len(index) == 2 and index[1] == 1:
+            row = index[0]
+            if 0 <= row < len(current):
+                current.pop(row)
+
+        paths_str = "\n".join(current)
+        rows = [[path, "❌"] for path in current]
+        return paths_str, rows
+
+    def on_clear_local_files(self):
+        return "", [], None, ""
+
+    def on_input_file_change(self, x):
+        # 上传文件与本地文件列表互斥：有上传文件时清空本地文件列表
+        if x:
+            return "", []
+        return gr.update(), gr.update()
+
+    def on_input_folder_change(self, x):
+        # 输入文件夹与本地文件列表互斥：有文件夹时清空本地文件列表
+        if x:
+            return None, "", []
+        return gr.update(), gr.update(), gr.update()
 
     def on_select_local_folder(self):
         folder = self.select_local_folder()
         if not folder:
-            return gr.update(), gr.update(), gr.update()
-        return "", None, folder
+            return gr.update(), gr.update(), gr.update(), gr.update()
+        return "", [], None, folder
 
     def on_select_local_subs(self):
         files = self.select_local_subs()
