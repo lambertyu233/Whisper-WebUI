@@ -89,7 +89,7 @@ def extract_audio_from_video(video_path: str, output_dir: Optional[str] = None) 
     codec = get_audio_codec(video_path)
     ext = CODEC_TO_EXT.get(codec, ".m4a")
 
-    output_path = os.path.join(base_dir, f"{file_stem}_speech{ext}")
+    output_path = os.path.join(base_dir, f"{file_stem}{ext}")
 
     # 1. Try direct stream copy (zero re-encoding loss, fastest)
     try:
@@ -108,7 +108,7 @@ def extract_audio_from_video(video_path: str, output_dir: Optional[str] = None) 
 
     # 2. Fallback: Extract to wav if stream copy failed
     try:
-        output_path = os.path.join(base_dir, f"{file_stem}_speech.wav")
+        output_path = os.path.join(base_dir, f"{file_stem}.wav")
         cmd_fallback = [
             "ffmpeg", "-y",
             "-i", video_path,
