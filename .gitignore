@@ -12,3 +12,4 @@ models/
 modules/yt_tmp.wav
 configs/default_parameters.yaml
 .vscode/
+.codebuddy/
